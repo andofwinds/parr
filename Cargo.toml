@@ -2,5 +2,9 @@
 name = "parr"
 version = "0.1.0"
 edition = "2021"
-
-[dependencies]
+authors = [ "Andrey baranov (andofwinds) <andrey@elib.ru>" ]
+description = "A C-like unknown-length array type."
+readme = "README.md"
+repository = "https://github.com/andofwinds/parr"
+license = "MPL-2.0"
+keywords = ["osdev", "no-std", "c"]
