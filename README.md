@@ -1,23 +1,39 @@
-# The **P**ointer **Arr**ay.
+# The **P**ointer **Arr**ay (PArr).
 
-## Turn your pointer into array!
+## Provides a type to meke raw pointer indexable as an array, just like in C!
 
-Provides a C-like unknown-length array type. (The `T[]` type).
+# Examples
 
-# Examples.
-## Simple `[1; 2; 3]` array from slice.
-Rust:
+## New from raw address
 ```rust
-let arr = Parr::<u8>::from([1, 2, 3].as_slice());
-assert_eq!(arr[1], 2);
+let arr: Parr<u8> = Parr::new(&[11_u8, 22, 33, 44] as *const _ as u64);
+assert_eq!(arr[1], 22);
 ```
-C equivalent:
-```C
-uint8_t arr[] = {1, 2, 3};
+Same code in C:
+```c
+uint8_t arr[] = {11, 22, 33, 44};
+// arr[1] == 22
 ```
 
-## From pointer.
+## Usage in structures
 ```rust
-let arr = Parr::<u8>::new([1, 2, 3].as_ptr() as u64);
-assert_eq!(arr[1], 2);
+#[repr(C)]
+struct Foo {
+    arr: Parr<u8>,
+}
+```
+Same code in C:
+```c
+struct foo {
+    uint8_t* arr,
+};
+```
+
+## Usage in function arguments
+```rust
+extern "C" fn foo(arr: Parr<u8>) { }
+```
+Same code in C:
+```c
+void foo(uint8_t* arr) { }
 ```

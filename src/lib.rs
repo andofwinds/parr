@@ -7,7 +7,7 @@
 #![no_std]
 #![doc = include_str!("../README.md")]
 
-use core::ops::Index;
+use core::{any::Any, ops::Index};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(transparent)]
@@ -28,6 +28,11 @@ impl<T: Sized> Parr<T> {
     /// - `B`: Type of the `base` argument, anything that can be casted to `u64`.
     pub fn new<B: Into<u64>>(base: B) -> Self {
         Self ( base.into() as *mut T )
+    }
+
+    /// Creates a new `Self` from the given raw pointer.
+    pub fn from_ptr<A: Any>(ptr: *const A) -> Self {
+        Self (ptr as *mut T)
     }
 
     /// Returns an array's base address.
@@ -67,8 +72,15 @@ mod tests {
     }
 
     #[test]
-    fn from_ptr() {
+    fn from_u64() {
         let arr: Parr<u8> = Parr::new([11_u8, 22, 33].as_ptr() as u64);
+
+        assert_eq!(arr[1], 22);
+    }
+
+    #[test]
+    fn from_ptr() {
+        let arr: Parr<u8> = Parr::from_ptr([11_u8, 22, 33].as_ptr());
 
         assert_eq!(arr[1], 22);
     }
