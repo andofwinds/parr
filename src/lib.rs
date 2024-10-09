@@ -7,7 +7,7 @@
 #![no_std]
 #![doc = include_str!("../README.md")]
 
-use core::{any::Any, ops::Index};
+use core::{any::Any, ops::{Index, IndexMut}};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(transparent)]
@@ -45,17 +45,23 @@ impl<T: Sized> From<&[T]> for Parr<T> {
         Self (
             value
                     as *const _
-                    as *const u64
-                    as u64
                     as *mut T
         )
     }
 }
 impl<T: Sized> Index<usize> for Parr<T> {
     type Output = T;
+
     fn index(&self, index: usize) -> &Self::Output {
         unsafe {
             &*self.0.add(index)
+        }
+    }
+}
+impl<T: Sized> IndexMut<usize> for Parr<T> {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        unsafe {
+            &mut *self.0.add(index)
         }
     }
 }
@@ -83,5 +89,35 @@ mod tests {
         let arr: Parr<u8> = Parr::from_ptr([11_u8, 22, 33].as_ptr());
 
         assert_eq!(arr[1], 22);
+    }
+
+    #[test]
+    fn change_state() {
+        let raw_arr = [11_u8, 22, 33];
+        let mut arr: Parr<u8> = Parr::from_ptr(raw_arr.as_ptr());
+        
+        arr[1] = 42;
+
+        assert_eq!(arr[1], 42);
+    }
+
+    #[test]
+    fn struct_as_member() {
+        #[derive(Debug, Copy, Clone, PartialEq)]
+        struct Member {
+            index: u8,
+            state: u8,
+        }
+
+        let mut i: u8 = 0;
+        let members: [Member; 5] = [Member {
+            index: (|| {i += 1; i})(),
+            state: i * 3,
+        }; 5];
+
+        let mut arr: Parr<Member> = Parr::from_ptr(members.as_ptr());
+
+        arr[2] = Member{index:1, state:42};
+        assert_eq!(arr[2], Member{index:1, state:42});
     }
 }
