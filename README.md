@@ -1,6 +1,6 @@
 # The **P**ointer **Arr**ay (PArr).
 
-## Provides a type to meke raw pointer indexable as an array, just like in C!
+## Provides a type to make raw pointer indexable as an array, just like in C!
 
 # Examples
 
