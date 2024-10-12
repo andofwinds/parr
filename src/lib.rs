@@ -9,14 +9,14 @@
 
 use core::{any::Any, ops::{Index, IndexMut}};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(transparent)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 /// # The Pointer Array.
 ///
 /// Holds pointer to a first element of the array (base address).
 ///
 /// # Generics:
-/// - `T`: Type of each element in the array.
+/// - `T`: Type of the each element in array.
 pub struct Parr<T: Sized> ( *mut T );
 impl<T: Sized> Parr<T> {
     /// ## Creates new array from the given `base` address pointer.
@@ -33,6 +33,13 @@ impl<T: Sized> Parr<T> {
     /// Creates a new `Self` from the given raw pointer.
     pub fn from_ptr<A: Any>(ptr: *const A) -> Self {
         Self (ptr as *mut T)
+    }
+
+    /// Creates a new `Self` from the given slice of `T`.
+    pub fn from_slice(value: &[T]) -> Self {
+        Self (
+            value as *const _ as *mut T,
+        )
     }
 
     /// Returns an array's base address.
@@ -75,6 +82,8 @@ impl <T: Sized+Default> Default for Parr<T> {
 
 #[cfg(test)]
 mod tests {
+    use core::mem::size_of;
+
     use crate::Parr;
 
     #[test]
@@ -93,19 +102,71 @@ mod tests {
 
     #[test]
     fn from_ptr() {
-        let arr: Parr<u8> = Parr::from_ptr([11_u8, 22, 33].as_ptr());
+        let raw_arr = [11_u8, 22, 33];
+        let arr: Parr<u8> = Parr::from_ptr(raw_arr.as_ptr());
 
         assert_eq!(arr[1], 22);
     }
 
     #[test]
     fn change_state() {
-        let raw_arr = [11_u8, 22, 33];
+        let raw_arr = [11_u8, 22, 33];  // Parr only keeps pointer so we need to store array to
+                                        // some variable in order to prevent segfault when trynna
+                                        // overwrite some array element.
         let mut arr: Parr<u8> = Parr::from_ptr(raw_arr.as_ptr());
         
         arr[1] = 42;
 
         assert_eq!(arr[1], 42);
+    }
+
+    #[test]
+    fn foreign_volatile() {
+        let members = [11_u8, 22, 33];
+        let arr: Parr<u8> = Parr::from_ptr(members.as_ptr());
+
+        // Volatile goes here.
+        unsafe {
+            let raw_member = (arr.base() + 1) as *mut u8; // Getting raw address of second member.
+            *raw_member = 42;
+        }
+
+        assert_eq!(arr[1], 42);
+    }
+
+    #[test]
+    fn foreign_access() {
+        struct Msg {
+            tags: Parr<u8>,
+        }
+
+        let tags: &[u8] = &[11_u8, 42, 56, 37];
+
+        #[inline]
+        fn new_msg(tags: &[u8]) {
+            let msg = Msg {
+                tags: Parr::from_slice(tags),
+            };
+
+            // Make a foreign access.
+            unsafe {
+                let elem: u8 = msg.tags[1];
+                assert_eq!(elem, 42);
+            }
+        }
+
+        let mut x: isize = 0;
+        for i in 0..42 {
+            x += i * 3 - 2;
+        }
+
+        new_msg(tags);
+    }
+
+    #[test]
+    fn get_size() {
+        assert_eq!(size_of::<Parr<u8>>(), 8); // 8 bytes on x64 systems,
+                                              // so, it must be 4 on x32 systems.
     }
 
     #[test]

@@ -4,15 +4,12 @@
 
 # Examples
 
-## New from raw address
+## A very basic usage
 ```rust
-let arr: Parr<u8> = Parr::new(&[11_u8, 22, 33, 44] as *const _ as u64);
-assert_eq!(arr[1], 22);
-```
-Same code in C:
-```c
-uint8_t arr[] = {11, 22, 33, 44};
-// arr[1] == 22
+let arr: [u8; _] = [11_u8, 22, 33];  // Store array to some variable which is Parr will be point to.
+let parr: Parr<u8> = Parr::from_ptr(arr.as_ptr());  // Create a Parr which is pointing to the out array.
+
+assert_eq!(parr[1], 22);    // It works!
 ```
 
 ## Usage in structures
@@ -37,3 +34,10 @@ Same code in C:
 ```c
 void foo(uint8_t* arr) { }
 ```
+
+# Changelog
+
+- `0.1.0`: First release.
+- `0.1.1`: Raw pointer behavior.
+- `0.1.2`: Mutability.
+- `0.1.3`: The core `Default` trait.
