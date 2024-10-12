@@ -67,7 +67,9 @@ impl<T: Sized> IndexMut<usize> for Parr<T> {
 }
 impl <T: Sized+Default> Default for Parr<T> {
     fn default() -> Self {
-        Self ( T::default() )
+        Self (
+            &mut T::default()
+        )
     }
 }
 
@@ -124,5 +126,23 @@ mod tests {
 
         arr[2] = Member{index:1, state:42};
         assert_eq!(arr[2], Member{index:1, state:42});
+    }
+
+    #[test]
+    fn default() {
+        struct Foo {
+            bar: u8,
+        }
+        impl Default for Foo {
+            fn default() -> Self {
+                Self {
+                    bar: 42,
+                }
+            }
+        }
+
+        let arr: Parr<Foo> = Parr::from_ptr([Foo::default()].as_ptr());
+
+        assert_eq!(arr[0].bar, 42);
     }
 }
