@@ -65,6 +65,11 @@ impl<T: Sized> IndexMut<usize> for Parr<T> {
         }
     }
 }
+impl <T: Sized+Default> Default for Parr<T> {
+    fn default() -> Self {
+        Self ( T::default() )
+    }
+}
 
 #[cfg(test)]
 mod tests {
